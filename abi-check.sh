@@ -24,14 +24,16 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+set -o errexit
+
 cleanup(){
     rm -rf build devel install
 }
 
 create_dumps(){
-    catkin_make install -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-Og" -j3 &&
+    catkin_make install -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-Og"
 
-    mkdir $1.dumps &&
+    mkdir $1.dumps
     for lib in $(ls install/lib/*.so); do
         abi-dumper $lib -o $1.dumps/$(basename $lib).dump -lver $1
     done
@@ -40,66 +42,66 @@ create_dumps(){
 REPOSITORIES="$(ls src/ | grep -v CMakeLists.txt)"
 
 for repo in $REPOSITORIES; do
-    pushd src/$repo >/dev/null &&
-    previous_release=$(git describe --tags --abbrev=0 HEAD^) &&
-    echo "$repo - comparing ${previous_release} to $(git rev-parse --abbrev-ref HEAD)" &&
+    pushd src/$repo >/dev/null
+    previous_release=$(git describe --tags --abbrev=0 HEAD^)
+    echo "$repo - comparing ${previous_release} to $(git rev-parse --abbrev-ref HEAD)"
     eval "prev_$repo=${previous_release}"
     eval "curr_$repo=$(git rev-parse HEAD)"
     popd >/dev/null
-done &&
+done
 
-echo &&
-echo "Is that correct? Press Enter to continue" &&
+echo
+echo "Is that correct? Press Enter to continue"
 read
 
-cleanup &&
+cleanup
 
-echo &&
-echo "*** Create new API/ABI dumps ***" &&
-echo &&
+echo
+echo "*** Create new API/ABI dumps ***"
+echo
 
-[[ -d new.dumps ]] && echo "*** Already present ***" || create_dumps new &&
+( [[ -d new.dumps ]] && echo "*** Already present ***" || create_dumps new )
 
-cleanup &&
+cleanup
 
-echo &&
-echo "*** Checkout previous repository versions ***" &&
-echo &&
+echo
+echo "*** Checkout previous repository versions ***"
+echo
 
 for repo in $REPOSITORIES; do
-        pushd src/$repo >/dev/null &&
+        pushd src/$repo >/dev/null
         prev=prev_${repo}
-        git checkout ${!prev} &&
+        git checkout ${!prev}
         popd >/dev/null
 done
 
-echo &&
-echo "*** Create old API/ABI dumps ***" &&
-echo &&
+echo
+echo "*** Create old API/ABI dumps ***"
+echo
 
-[[ -d old.dumps ]] && echo "*** Already present ***" || create_dumps old &&
+( [[ -d old.dumps ]] && echo "*** Already present ***" || create_dumps old )
 
-echo &&
-echo "*** Restore repository checkouts ***" &&
-echo &&
+echo
+echo "*** Restore repository checkouts ***"
+echo
 
 for repo in $REPOSITORIES; do
-        pushd src/$repo >/dev/null &&
+        pushd src/$repo >/dev/null
         curr=curr_${repo}
-        git checkout ${!curr} &&
+        git checkout ${!curr}
         popd >/dev/null
-done &&
+done
 
-echo &&
-echo "*** Generating Reports ***" &&
-echo &&
+echo
+echo "*** Generating Reports ***"
+echo
 
 for dump in libmoveit_trajectory_processing.so.dump; do # $(ls new.dumps/); do
     libname=$(echo $dump | sed 's:lib\(.*\).so.dump:\1:') &&
     if ! abi-compliance-checker -l $libname -old old.dumps/$dump -new new.dumps/$dump > tmp.log; then
-        echo "*********** Report states $libname is INCOMPATIBLE *************" &&
+        echo "*********** Report states $libname is INCOMPATIBLE *************"
         grep -A4 INCOMPATIBLE tmp.log
     fi
-done &&
+done
 
 rm tmp.log
