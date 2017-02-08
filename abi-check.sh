@@ -37,7 +37,7 @@ create_dumps(){
     done
 }
 
-REPOSITORIES="srdfdom moveit_msgs moveit moveit_resources"
+REPOSITORIES="$(ls src/ | grep -v CMakeLists.txt)"
 
 for repo in $REPOSITORIES; do
     pushd src/$repo >/dev/null &&
