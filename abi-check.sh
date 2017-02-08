@@ -31,7 +31,7 @@ cleanup(){
 }
 
 create_dumps(){
-    catkin_make install -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-Og"
+    catkin_make install -DCMAKE_BUILD_TYPE=Debug -DCATKIN_ENABLE_TESTING=0 -DCMAKE_CXX_FLAGS="-Og"
 
     mkdir $1.dumps
     for lib in $(ls install/lib/*.so); do
