@@ -96,7 +96,7 @@ echo
 echo "*** Generating Reports ***"
 echo
 
-for dump in libmoveit_trajectory_processing.so.dump; do # $(ls new.dumps/); do
+for dump in $(ls new.dumps/); do
     libname=$(echo $dump | sed 's:lib\(.*\).so.dump:\1:') &&
     if ! abi-compliance-checker -l $libname -old old.dumps/$dump -new new.dumps/$dump > tmp.log; then
         echo "*********** Report states $libname is INCOMPATIBLE *************"
